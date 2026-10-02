@@ -1,1 +1,605 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Wiki — Compositions Aniimo v2</title>
+<style>
+:root {
+  --bg:#f3f5f8; --paper:#fff; --ink:#1d2330; --muted:#697386;
+  --line:#dce1e9; --safe:#166534; --safe-bg:#dcfce7;
+  --test:#8a4b08; --test-bg:#fef3c7; --shadow:0 7px 22px rgba(24,33,52,.07);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+a{color:inherit}
+header{background:#171b24;color:white;padding:30px 24px 24px}
+header .wrap{max-width:1440px;margin:auto}
+h1{margin:0 0 8px;font-size:clamp(29px,5vw,46px);letter-spacing:-.03em}
+.subtitle{margin:0;max-width:980px;color:#c9ced8}
+.meta{margin-top:12px;color:#99a2b3;font-size:13px}
+nav{position:sticky;top:0;z-index:20;background:rgba(243,245,248,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{max-width:1440px;margin:auto;padding:9px 16px;display:flex;gap:8px;overflow-x:auto}
+nav a{text-decoration:none;white-space:nowrap;background:white;border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-weight:750}
+main{max-width:1440px;margin:auto;padding:24px 16px 72px}
+.quick{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:30px}
+.quick h2{margin:0 0 12px}
+.searchbar{margin:14px 0}
+.searchbar input{width:100%;padding:11px 13px;border:1px solid #cbd2dd;border-radius:10px;font-size:15px}
+.table-wrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:12px 13px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.055em;color:#596274;background:#f8f9fb}
+/* IMPORTANT: non-sticky table headers. This fixes the first DPS row being hidden/truncated. */
+.build-table th{position:static!important;top:auto!important}
+.overview td:first-child{white-space:nowrap;font-weight:800}
+.comp{margin:42px 0 58px;scroll-margin-top:68px}
+.section-head{border-left:7px solid var(--accent);background:white;border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;gap:18px}
+.eyebrow{font-size:12px;font-weight:900;letter-spacing:.11em;color:var(--accent)}
+.comp h2{font-size:31px;margin:2px 0 4px}
+.lead{margin:0;color:#4c5668}
+.toplink{font-size:13px;font-weight:800;text-decoration:none;color:var(--accent)}
+.variants{margin:12px 0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 16px}
+.variants ul{margin:6px 0 0;padding-left:20px}
+.build-table td:nth-child(1){min-width:165px}
+.build-table td:nth-child(2){min-width:190px}
+.build-table td:nth-child(3){min-width:220px}
+.build-table td:nth-child(4){min-width:200px}
+.build-table td:nth-child(5){min-width:170px}
+.build-table td:nth-child(6){min-width:135px}
+.build-table td:nth-child(7){min-width:300px}
+.aniimo{border-left:4px solid var(--accent)}
+.role{color:var(--muted);font-size:13px}
+.badge{display:inline-block;margin-top:7px;padding:2px 7px;border-radius:999px;font-size:11px;font-weight:900}
+.badge.safe{color:var(--safe);background:var(--safe-bg)}
+.badge.test{color:var(--test);background:var(--test-bg)}
+.rotation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.phase{display:flex;gap:10px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px}
+.phase>span{display:flex;align-items:center;justify-content:center;width:28px;height:28px;min-width:28px;border-radius:50%;background:var(--accent);color:white;font-weight:900}
+.phase strong{display:block;margin-bottom:3px}
+.phase p{margin:0;color:#505a6b;font-size:13px}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:15px 17px}
+.card h3{margin:0 0 8px}
+.card ul{margin:0;padding-left:20px}
+.card.warning{border-left:5px solid #d97706}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.context-note{background:#eef4ff;border:1px solid #cddbf7;border-radius:13px;padding:14px 16px;margin-top:14px}
+.context-note strong{color:#274c8f}
+footer{max-width:1440px;margin:auto;padding:0 16px 40px;color:var(--muted);font-size:13px}
+.hidden{display:none!important}
+@media (max-width:1050px){
+  .rotation-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .rotation-grid{grid-template-columns:1fr}
+  .section-head{display:block}
+  .toplink{display:inline-block;margin-top:10px}
+  th,td{padding:10px}
+}
+@media print{
+  nav,.searchbar,.toplink{display:none!important}
+  body{background:#fff;font-size:10.5px}
+  .quick,.section-head,.table-wrap,.card,.variants,.phase{box-shadow:none}
+  .comp{break-before:page;margin-top:0}
+  .rotation-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="wrap">
+    <h1>Mini Wiki — Compositions Aniimo</h1>
+    <p class="subtitle">Pense-bête personnel des compositions optimisées de référence. Les variantes servent à adapter l’équipe à la rencontre sans redéfinir le cœur de la composition.</p>
+    <div class="meta">Version 2 — rotations adaptées aux observations de combat réel : cooldowns hors terrain, coût temporel des ultimes, changements de cible et fenêtre BREAK affichée à 250 %.</div>
+  </div>
+</header>
 
+<nav>
+  <div class="wrap">
+    <a href="#top">Sommaire</a>
+    <a href="#foudre">⚡ Foudre</a><a href="#tenebres">🌑 Ténèbres</a><a href="#plante">🌿 Plante</a><a href="#feu">🔥 Feu</a><a href="#eau">💧 Eau</a><a href="#lumiere">✨ Lumière</a>
+  </div>
+</nav>
+
+<main>
+  <section class="quick">
+    <h2>Vue rapide</h2>
+    <div class="searchbar">
+      <input id="search" type="search" placeholder="Rechercher : Croc, REGEN, BREAK, Turbulaine, RUPTURE…">
+    </div>
+    <div class="table-wrap">
+      <table class="overview">
+        <thead><tr><th>Élément</th><th>Composition optimisée de référence</th><th>Usage</th></tr></thead>
+        <tbody><tr><td><a href='#foudre'>⚡ Foudre</a></td><td>Fulmi · Danzard · Pulsato · Turbulaine</td><td>Composition optimisée de référence — DPS Foudre soutenu</td></tr>
+<tr><td><a href='#tenebres'>🌑 Ténèbres</a></td><td>Stellaria · Fragrancier · Sorcelonde · Casquillon</td><td>Composition optimisée de référence — DPS Ténèbres + RUPTURE</td></tr>
+<tr><td><a href='#plante'>🌿 Plante</a></td><td>Lumiris · Méliflore · Voilotus · Turbulaine</td><td>Composition optimisée de référence — plafond DPS Plante</td></tr>
+<tr><td><a href='#feu'>🔥 Feu</a></td><td>Hurlebrasier · Sparkelf · Vitti · Inferlupin</td><td>Composition optimisée de référence — burst Feu sur fenêtre de RUPTURE</td></tr>
+<tr><td><a href='#eau'>💧 Eau</a></td><td>Astrophel · Ondeloutre · Fabulle · Terriloutre</td><td>Composition optimisée de référence — DPS Eau avec RUPTURE</td></tr>
+<tr><td><a href='#lumiere'>✨ Lumière</a></td><td>Lunara · Turbulaine · Vitti · breaker adapté</td><td>Composition optimisée de référence — Lumière avec breaker selon cible</td></tr></tbody>
+      </table>
+    </div>
+    <div class="context-note">
+      <strong>Principe :</strong> le DPS principal doit exploiter l’élément ciblé. Les supports n’ont pas besoin d’être du même élément : ils doivent surtout maximiser le carry, la RUPTURE, les PE/PU et la survie. Les variantes servent aux mécaniques particulières du contenu end-game.
+    </div>
+    <div class="legend">
+      <span><span class='badge safe'>SÛR</span> choix suffisamment stabilisé</span>
+      <span><span class='badge test'>À TESTER</span> interaction pouvant encore changer une dépense rare</span>
+    </div>
+  </section>
+
+  
+    <section id="foudre" class="comp" style="--accent:#8A6D00">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">⚡ COMPOSITION DE RÉFÉRENCE</div>
+          <h2>Foudre</h2>
+          <p class="lead"><strong>Fulmi · Danzard · Pulsato · Turbulaine</strong><br>Composition optimisée de référence — DPS Foudre soutenu</p>
+        </div>
+        <a class="toplink" href="#top">↑ Sommaire</a>
+      </div>
+
+      <div class="variants">
+        <strong>Ajustements selon le contenu</strong>
+        <ul><li>RUPTURE forte : Fulmi · Danzard · Voltignasse · Luminelle</li><li>Burst Foudre / support élémentaire : Luminelle peut remplacer Turbulaine selon la rencontre</li></ul>
+      </div>
+
+      <div class="table-wrap">
+        <table class="build-table">
+          <thead>
+            <tr>
+              <th>Aniimo / rôle</th><th>Forme</th><th>Compétences</th>
+              <th>Objet / pacte</th><th>Stats</th><th>Personnalité</th><th>Note pratique</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="aniimo"><strong>Fulmi</strong><br><span class="role">DPS principal</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana par défaut ; Base si la pression Ténèbres rend le double type dangereux</td>
+          <td>Lame foudroyante améliorée + Tempête de lames foudroyantes</td>
+          <td><strong>Croc féroce L15 + pacte Fulmi</strong></td>
+          <td>ATQ 20 → REGEN 20 → survie</td>
+          <td>E + N</td>
+          <td>Relâcher Tempête sur un multiple de 3 entailles. Le Pendentif reste une variante neutre, pas le BiS spécialisé actuel.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Danzard</strong><br><span class="role">Support CRIT Foudre</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Balayage tonitruant + Décharge électrique</td>
+          <td><strong>Croc féroce L15</strong></td>
+          <td>ATQ jusqu’au cap 35 % CRIT Foudre au tooltip ; sinon ATQ 20 → PV</td>
+          <td>E + S</td>
+          <td>Balayage en premier après entrée pour profiter de la compétence gratuite. Pacte Danzard = faible priorité.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Pulsato</strong><br><span class="role">REGEN / baisse RÉS Foudre</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Geyser chargé + Courant perturbateur</td>
+          <td><strong>Plume vive L15 + pacte Pulsato</strong></td>
+          <td>REGEN jusqu’à Geyser 1,20 PE/s ET ultime −42 % RÉS Foudre ; puis survie</td>
+          <td>I jusqu’aux caps</td>
+          <td>Le gros intérêt est la génération PE immédiate + la baisse de résistance Foudre.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Turbulaine</strong><br><span class="role">Amplification générale</span><br><span class='badge test'>À TESTER</span></td>
+          <td>Adapter au matchup ; ne pas figer une forme unique</td>
+          <td>Déflagration de Cumulaine + Bouclier nuage</td>
+          <td><strong>Cloche L15 + pacte (plafond DPS) / Carapace L15 + pacte (sûr)</strong></td>
+          <td>PV → défense adaptée au boss</td>
+          <td>Faible priorité</td>
+          <td>Embrumé prêt → Déflagration → sortie immédiate. Cloche à valider sur compétence ramenée à 0 PE.</td>
+        </tr></tbody>
+        </table>
+      </div>
+
+      <div class="rotation-grid">
+        <div class="phase"><span>1</span><div><strong>Ouverture</strong><p>Pulsato ultime si prêt → Turbulaine Déflagration → Danzard Balayage + Décharge → Pulsato Geyser → Fulmi buff CRIT</p></div></div>
+        <div class="phase"><span>2</span><div><strong>Pré-BREAK</strong><p>Préparer les buffs avant de déclencher la RUPTURE si la rencontre l’exige.</p></div></div>
+        <div class="phase"><span>3</span><div><strong>BREAK</strong><p>Déclencher BREAK puis Fulmi immédiatement ; aucune maintenance support pendant la fenêtre ×250 %.</p></div></div>
+        <div class="phase"><span>4</span><div><strong>Maintenance</strong><p>Rafraîchir uniquement les buffs réellement expirés ; laisser les CD tourner hors terrain.</p></div></div>
+      </div>
+
+      <div class="card warning">
+        <h3>À ne pas oublier</h3>
+        <ul><li>Cloche Turbulaine : proc sur compétence ramenée à 0 PE encore à valider avant dépense rare.</li><li>Les cinématiques d’ultime consomment le chrono : ne pas lancer un ultime de support sans gain réel.</li></ul>
+      </div>
+    </section>
+    
+    <section id="tenebres" class="comp" style="--accent:#5A3D76">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">🌑 COMPOSITION DE RÉFÉRENCE</div>
+          <h2>Ténèbres</h2>
+          <p class="lead"><strong>Stellaria · Fragrancier · Sorcelonde · Casquillon</strong><br>Composition optimisée de référence — DPS Ténèbres + RUPTURE</p>
+        </div>
+        <a class="toplink" href="#top">↑ Sommaire</a>
+      </div>
+
+      <div class="variants">
+        <strong>Ajustements selon le contenu</strong>
+        <ul><li>Sans besoin de breaker : Stellaria · Fragrancier · Sorcelonde · Turbulaine Prismana</li><li>Couverture Lumière : breaker alternatif selon la rencontre si Casquillon devient trop exposé</li></ul>
+      </div>
+
+      <div class="table-wrap">
+        <table class="build-table">
+          <thead>
+            <tr>
+              <th>Aniimo / rôle</th><th>Forme</th><th>Compétences</th>
+              <th>Objet / pacte</th><th>Stats</th><th>Personnalité</th><th>Note pratique</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="aniimo"><strong>Stellaria</strong><br><span class="role">DPS principal</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana si la couverture Glace est utile ; Base sinon</td>
+          <td>Magie d’ombre + Étoiles filantes</td>
+          <td><strong>Épingles de fission L15 + pacte Stellaria</strong></td>
+          <td>ATQ 20 → REGEN 20</td>
+          <td>E + S</td>
+          <td>Clone + attaques de base = cœur du DPS. Les Épingles sur clone restent une interaction communautaire à garder sous surveillance.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Fragrancier</strong><br><span class="role">Amplification Ténèbres</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Marquage de parfum + Floraison fanée</td>
+          <td><strong>Croc féroce L15 + pacte Fragrancier</strong></td>
+          <td>ATQ 20 → PV 20 → défense</td>
+          <td>E prioritaire</td>
+          <td>Marquage renforce directement les attaques de base Ténèbres. Viser les caps du tooltip sur baisse RÉS / ultime.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Sorcelonde</strong><br><span class="role">REGEN / utilitaire</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana actuelle</td>
+          <td>Explosion sonique euphorique + Domaine du trou noir</td>
+          <td><strong>Plume vive L15 + pacte Sorcelonde</strong></td>
+          <td>REGEN 20 → PV</td>
+          <td>I jusqu’au cap</td>
+          <td>Malédiction + attaques de base Ténèbres = récupération PE. Anti-soin / anti-bouclier = variantes de rencontre.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Casquillon</strong><br><span class="role">Breaker</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base par défaut</td>
+          <td>Fronde bondissante + Heurt brise-garde</td>
+          <td><strong>Pince gargantuesque L15</strong></td>
+          <td>RUPTURE 20 → DEF.P 20</td>
+          <td>E + S + T</td>
+          <td>DEF.P augmente aussi la RUPTURE via le trait. Préparer la jauge à ~99 %, puis déclencher BREAK sur commande.</td>
+        </tr></tbody>
+        </table>
+      </div>
+
+      <div class="rotation-grid">
+        <div class="phase"><span>1</span><div><strong>Ouverture</strong><p>Casquillon pose Fronde et prépare la jauge → Fragrancier ultime si prêt + Marquage → Sorcelonde Explosion sonique</p></div></div>
+        <div class="phase"><span>2</span><div><strong>Pré-BREAK</strong><p>Ramener la jauge juste avant le seuil ; Stellaria doit être prête à entrer immédiatement.</p></div></div>
+        <div class="phase"><span>3</span><div><strong>BREAK</strong><p>Casquillon déclenche BREAK → Stellaria Magie d’ombre → Étoiles filantes → chaînes d’attaques de base.</p></div></div>
+        <div class="phase"><span>4</span><div><strong>Maintenance</strong><p>Rafraîchir Marquage / Malédiction seulement quand nécessaire ou lors d’un changement de cible.</p></div></div>
+      </div>
+
+      <div class="card warning">
+        <h3>À ne pas oublier</h3>
+        <ul><li>Rang15 de la Pince : ne pas compter le doublement comme garanti tant que la condition « potentiel acquis &gt;15 » n’est pas vérifiée.</li><li>Si la cible change, les debuffs et marques doivent être reconstruits.</li></ul>
+      </div>
+    </section>
+    
+    <section id="plante" class="comp" style="--accent:#2F6B3B">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">🌿 COMPOSITION DE RÉFÉRENCE</div>
+          <h2>Plante</h2>
+          <p class="lead"><strong>Lumiris · Méliflore · Voilotus · Turbulaine</strong><br>Composition optimisée de référence — plafond DPS Plante</p>
+        </div>
+        <a class="toplink" href="#top">↑ Sommaire</a>
+      </div>
+
+      <div class="variants">
+        <strong>Ajustements selon le contenu</strong>
+        <ul><li>RUPTURE rapide : remplacer Turbulaine par Casquillon</li><li>RUPTURE Plante / couverture Feu : remplacer Turbulaine par Nutrion Montagnes</li><li>Carry de couverture : Rapiéronce contre les counters naturels si nécessaire</li></ul>
+      </div>
+
+      <div class="table-wrap">
+        <table class="build-table">
+          <thead>
+            <tr>
+              <th>Aniimo / rôle</th><th>Forme</th><th>Compétences</th>
+              <th>Objet / pacte</th><th>Stats</th><th>Personnalité</th><th>Note pratique</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="aniimo"><strong>Lumiris</strong><br><span class="role">DPS principal</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana</td>
+          <td>Ombre de Lumiris + Tourbillon de fleurs</td>
+          <td><strong>Plume arc-en-ciel florale L15</strong></td>
+          <td>ATQ 20 → REGEN 20</td>
+          <td>E + N</td>
+          <td>Noyau : 2 clones ; ultime : 3e clone. L’objet signature est l’investissement central du carry.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Méliflore</strong><br><span class="role">Support CRIT Plante</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana si purification utile ; sinon forme selon rencontre</td>
+          <td>Bénédiction épineuse + Rose de soin / Roses destructrices</td>
+          <td><strong>Plume vive L15</strong></td>
+          <td>ATQ 20 → survie</td>
+          <td>E prioritaire</td>
+          <td>La Plume ferme le trou de Bénédiction : 18 s → 14,4 s pour 15 s de durée live.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Voilotus</strong><br><span class="role">REGEN Plante</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Floraisons de vitalité + Cyclone de feuilles</td>
+          <td><strong>Plume vive L15 + noyau amélioré</strong></td>
+          <td>REGEN 20 → PV 20</td>
+          <td>I + J</td>
+          <td>Floraisons alimente PE/PU et prépare le terrain Plante.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Turbulaine</strong><br><span class="role">Amplification générale</span><br><span class='badge test'>À TESTER</span></td>
+          <td>Adapter au matchup</td>
+          <td>Déflagration de Cumulaine + Bouclier nuage</td>
+          <td><strong>Cloche L15 + pacte (DPS) / Carapace L15 + pacte (sûr)</strong></td>
+          <td>PV → défenses</td>
+          <td>Faible priorité</td>
+          <td>Le support n’a pas besoin d’être Plante : il doit maximiser le carry. Entrée très courte.</td>
+        </tr></tbody>
+        </table>
+      </div>
+
+      <div class="rotation-grid">
+        <div class="phase"><span>1</span><div><strong>Ouverture</strong><p>Turbulaine Déflagration → Méliflore ultime si prêt + Bénédiction → Voilotus ultime si prêt + Cyclone + Floraisons</p></div></div>
+        <div class="phase"><span>2</span><div><strong>Pré-BREAK</strong><p>Si variante breaker : préparer la jauge avant de poser le setup final Lumiris.</p></div></div>
+        <div class="phase"><span>3</span><div><strong>BREAK</strong><p>Déclencher BREAK → Lumiris Ombre renforcée → ultime si prêt → Tourbillon → chaînes d’attaques de base.</p></div></div>
+        <div class="phase"><span>4</span><div><strong>Maintenance</strong><p>Ne pas réinviter les supports pendant BREAK ; reconstruire seulement ce qui expire.</p></div></div>
+      </div>
+
+      <div class="card warning">
+        <h3>À ne pas oublier</h3>
+        <ul><li>Pacte Méliflore : ne pas investir uniquement sur l’ancienne durée 21 s, non confirmée live.</li><li>Les clones persistants gardent beaucoup de valeur hors terrain : ne pas les réinitialiser inutilement.</li></ul>
+      </div>
+    </section>
+    
+    <section id="feu" class="comp" style="--accent:#9E3D22">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">🔥 COMPOSITION DE RÉFÉRENCE</div>
+          <h2>Feu</h2>
+          <p class="lead"><strong>Hurlebrasier · Sparkelf · Vitti · Inferlupin</strong><br>Composition optimisée de référence — burst Feu sur fenêtre de RUPTURE</p>
+        </div>
+        <a class="toplink" href="#top">↑ Sommaire</a>
+      </div>
+
+      <div class="variants">
+        <strong>Ajustements selon le contenu</strong>
+        <ul><li>Sans breaker obligatoire : Hurlebrasier · Sparkelf · Vitti · Turbulaine</li><li>Architecture soutenue Malus Feu : Infergon · Sparkelf · Flamirage · Magmarex</li></ul>
+      </div>
+
+      <div class="table-wrap">
+        <table class="build-table">
+          <thead>
+            <tr>
+              <th>Aniimo / rôle</th><th>Forme</th><th>Compétences</th>
+              <th>Objet / pacte</th><th>Stats</th><th>Personnalité</th><th>Note pratique</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="aniimo"><strong>Hurlebrasier</strong><br><span class="role">DPS principal / burst</span><br><span class='badge test'>À TESTER</span></td>
+          <td>Feu pur vs Plante ; Hautes Plaines Feu/Roche vs Glace</td>
+          <td>Poing enflammé + Coup de pied ardent</td>
+          <td><strong>Croc L15 (sûr) / Gants explosifs L15 si snapshot PE confirmé</strong></td>
+          <td>ATQ 20 → REGEN 20</td>
+          <td>E + S</td>
+          <td>Vitti +10 PE max ajoute directement une tranche de +30 % à Burn Breaker chargé.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Sparkelf</strong><br><span class="role">Amplification Feu</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana Parfait si acquis</td>
+          <td>Inspiration + Don de friandise / Énergie étincelante</td>
+          <td><strong>Croc L15 tant que l’ATQ améliore encore les buffs</strong></td>
+          <td>ATQ jusqu’aux caps → PV / REGEN</td>
+          <td>E prioritaire</td>
+          <td>Entrer avec &gt;40 PE. Ultime puis Inspiration juste avant le burst.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Vitti</strong><br><span class="role">REGEN / +PE max</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana</td>
+          <td>Onde lumineuse éthérée + Spores hypnotiques</td>
+          <td><strong>Plume vive L15</strong></td>
+          <td>REGEN 20 → PV 20</td>
+          <td>I</td>
+          <td>Support hors élément mais parfaitement cohérent avec Hurlebrasier grâce au +10 PE max.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Inferlupin</strong><br><span class="role">Breaker</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base / Prismana</td>
+          <td>Esprit de Jappardent inébranlable + Rayons croisés</td>
+          <td><strong>Pince gargantuesque L15</strong></td>
+          <td>RUPTURE 20 → ATQ 20 → REGEN</td>
+          <td>RUPTURE / survie</td>
+          <td>Préparer la jauge puis sortir vite. La fenêtre BREAK observée peut être très courte (~2 s sur certaines cibles).</td>
+        </tr></tbody>
+        </table>
+      </div>
+
+      <div class="rotation-grid">
+        <div class="phase"><span>1</span><div><strong>Ouverture</strong><p>Vitti Onde → Inferlupin prépare la jauge → Hurlebrasier Fire Kick sur vraie esquive → Sparkelf ultime + Inspiration</p></div></div>
+        <div class="phase"><span>2</span><div><strong>Pré-BREAK</strong><p>Hurlebrasier doit être prêt et chargé avant de provoquer le BREAK.</p></div></div>
+        <div class="phase"><span>3</span><div><strong>BREAK</strong><p>Inferlupin déclenche BREAK → Hurlebrasier Burn Breaker immédiatement.</p></div></div>
+        <div class="phase"><span>4</span><div><strong>Maintenance</strong><p>Après le burst : Vitti Butterfly Dance → reconstruire PE → nouveau cycle.</p></div></div>
+      </div>
+
+      <div class="card warning">
+        <h3>À ne pas oublier</h3>
+        <ul><li>Gants explosifs : snapshot PE de Burn Breaker encore non arbitré.</li><li>Une cinématique d’ultime consomme le timer : n’utiliser les ultimes de support que si leur valeur couvre ce coût.</li></ul>
+      </div>
+    </section>
+    
+    <section id="eau" class="comp" style="--accent:#236A8C">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">💧 COMPOSITION DE RÉFÉRENCE</div>
+          <h2>Eau</h2>
+          <p class="lead"><strong>Astrophel · Ondeloutre · Fabulle · Terriloutre</strong><br>Composition optimisée de référence — DPS Eau avec RUPTURE</p>
+        </div>
+        <a class="toplink" href="#top">↑ Sommaire</a>
+      </div>
+
+      <div class="variants">
+        <strong>Ajustements selon le contenu</strong>
+        <ul><li>Sans breaker : Astrophel · Ondeloutre · Fabulle · Turbulaine</li><li>Survie + RUPTURE : remplacer Fabulle par Givrotus</li></ul>
+      </div>
+
+      <div class="table-wrap">
+        <table class="build-table">
+          <thead>
+            <tr>
+              <th>Aniimo / rôle</th><th>Forme</th><th>Compétences</th>
+              <th>Objet / pacte</th><th>Stats</th><th>Personnalité</th><th>Note pratique</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="aniimo"><strong>Astrophel</strong><br><span class="role">DPS principal</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana par défaut ; adapter Orages si la défense Foudre est déterminante</td>
+          <td>Entaille aquatique + Percussion torrentielle</td>
+          <td><strong>Croc L15 + pacte Astrophel</strong></td>
+          <td>ATQ 20 → REGEN 20</td>
+          <td>ESTJ</td>
+          <td>Pacte : Entaille n’épuise plus les flaques. Percussion d’abord pour le +15 % amp 20 s.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Ondeloutre</strong><br><span class="role">Flaques / buff Eau</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Surf + Canon aqueux</td>
+          <td><strong>Croc L15 + pacte Ondeloutre</strong></td>
+          <td>ATQ jusqu’aux caps → PV / DEF</td>
+          <td>E prioritaire</td>
+          <td>Surf pacté = 6 flaques. Surtension est une variante soin, pas le skill par défaut.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Fabulle</strong><br><span class="role">REGEN / bulles</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Bulles + Attention à la bulle</td>
+          <td><strong>Plume vive L15 + pacte Fabulle</strong></td>
+          <td>REGEN jusqu’à 7 PE/bulle (≈500) → ATQ</td>
+          <td>I jusqu’au cap</td>
+          <td>6 bulles au cap = 42 PE ; pacte donne 2 bulles immédiatement.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Terriloutre</strong><br><span class="role">Breaker</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base</td>
+          <td>Hydroulade + Bouclier aquatique</td>
+          <td><strong>Pince gargantuesque L15</strong></td>
+          <td>RUPTURE 20 → PV 20 → défense</td>
+          <td>ESTJ</td>
+          <td>Choisir sexe opposé à Ondeloutre pour garantir Attrait. Préparer la jauge et garder les flaques pour Astrophel.</td>
+        </tr></tbody>
+        </table>
+      </div>
+
+      <div class="rotation-grid">
+        <div class="phase"><span>1</span><div><strong>Ouverture</strong><p>Ondeloutre Surf + ultime si prêt → Fabulle Bulles → Terriloutre prépare la jauge</p></div></div>
+        <div class="phase"><span>2</span><div><strong>Pré-BREAK</strong><p>Fabulle peut remplir la réserve avant la rupture ; Astrophel doit être prêt à entrer.</p></div></div>
+        <div class="phase"><span>3</span><div><strong>BREAK</strong><p>Terriloutre déclenche BREAK → Astrophel Percussion → ultime si pertinent → Entaille complète.</p></div></div>
+        <div class="phase"><span>4</span><div><strong>Maintenance</strong><p>Conserver les flaques : ne pas laisser Surtension les consommer sans nécessité.</p></div></div>
+      </div>
+
+      <div class="card warning">
+        <h3>À ne pas oublier</h3>
+        <ul><li>Charme radieux d’Ondeloutre sur Astrophel asexué : interaction communautaire, non validée par notre client.</li><li>Debuffs liés à une cible doivent être réappliqués si l’adversaire change.</li></ul>
+      </div>
+    </section>
+    
+    <section id="lumiere" class="comp" style="--accent:#917824">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">✨ COMPOSITION DE RÉFÉRENCE</div>
+          <h2>Lumière</h2>
+          <p class="lead"><strong>Lunara · Turbulaine · Vitti · breaker adapté</strong><br>Composition optimisée de référence — Lumière avec breaker selon cible</p>
+        </div>
+        <a class="toplink" href="#top">↑ Sommaire</a>
+      </div>
+
+      <div class="variants">
+        <strong>Ajustements selon le contenu</strong>
+        <ul><li>Vs Ténèbres : Lunara · Turbulaine Prismana · Vitti · Casquillon</li><li>Vs Vent : Lunara · Turbulaine Base · Vitti · Tubabec</li><li>Sans breaker : remplacer le breaker par Givrotus Prismana</li></ul>
+      </div>
+
+      <div class="table-wrap">
+        <table class="build-table">
+          <thead>
+            <tr>
+              <th>Aniimo / rôle</th><th>Forme</th><th>Compétences</th>
+              <th>Objet / pacte</th><th>Stats</th><th>Personnalité</th><th>Note pratique</th>
+            </tr>
+          </thead>
+          <tbody>
+        <tr>
+          <td class="aniimo"><strong>Lunara</strong><br><span class="role">DPS principal</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Base / transformation Fennelune via ultime</td>
+          <td>Impact lunaire + Éclairs lumins</td>
+          <td><strong>Croc L15 + pacte Lunara</strong></td>
+          <td>ATQ 20 → REGEN 20</td>
+          <td>E + S</td>
+          <td>En compo spécialisée, son +30 % hors avantage élémentaire est inactif. Chaque compétence = 4 Marques d’argent à consommer en attacks de base.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Turbulaine</strong><br><span class="role">Amplification générale</span><br><span class='badge test'>À TESTER</span></td>
+          <td>Prismana vs Ténèbres ; Base/Brumes vs Vent</td>
+          <td>Déflagration de Cumulaine + Bouclier nuage</td>
+          <td><strong>Cloche L15 + pacte (DPS) / Carapace L15 + pacte (sûr)</strong></td>
+          <td>PV → défenses</td>
+          <td>Faible priorité</td>
+          <td>Le choix de forme est défensif ; le buff reste général et profite directement à Lunara.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Vitti</strong><br><span class="role">REGEN</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Prismana</td>
+          <td>Onde lumineuse éthérée + Spores hypnotiques</td>
+          <td><strong>Plume vive L15</strong></td>
+          <td>REGEN 20 → PV 20</td>
+          <td>I</td>
+          <td>Soutient la boucle compétence → 4 basics de Lunara.</td>
+        </tr>
+        <tr>
+          <td class="aniimo"><strong>Casquillon / Tubabec</strong><br><span class="role">Breaker selon cible</span><br><span class='badge safe'>SÛR</span></td>
+          <td>Casquillon Base vs Ténèbres ; Tubabec Base vs Vent</td>
+          <td>CQ : Fronde + Heurt / TB : Garde tempétueuse + Souffle de pause</td>
+          <td><strong>Pince gargantuesque L15</strong></td>
+          <td>CQ : RUPTURE20 → DEF.P20 / TB : RUPTURE20 → PV20</td>
+          <td>Survie / RUPTURE</td>
+          <td>Le breaker est choisi pour survivre au matchup et déclencher BREAK sur commande.</td>
+        </tr></tbody>
+        </table>
+      </div>
+
+      <div class="rotation-grid">
+        <div class="phase"><span>1</span><div><strong>Ouverture</strong><p>Breaker prépare la jauge → Turbulaine Déflagration → Vitti Onde → Lunara Éclairs + 4 basics</p></div></div>
+        <div class="phase"><span>2</span><div><strong>Pré-BREAK</strong><p>Accumuler les marques / debuffs avant le seuil ; Lunara doit être active ou prête à entrer.</p></div></div>
+        <div class="phase"><span>3</span><div><strong>BREAK</strong><p>Breaker déclenche BREAK → Lunara ultime si rentable → 4 basics → Impact → 4 basics.</p></div></div>
+        <div class="phase"><span>4</span><div><strong>Maintenance</strong><p>Respecter la boucle skill → 4 attaques de base ; ne pas spammer les compétences.</p></div></div>
+      </div>
+
+      <div class="card warning">
+        <h3>À ne pas oublier</h3>
+        <ul><li>Épingles Lunara : ne pas pacter tant que l’interaction avec le +100 % des Marques n’est pas prouvée.</li><li>Le coût d’une cinématique d’ultime doit être pris en compte dans les combats chronométrés.</li></ul>
+      </div>
+    </section>
+    
+</main>
+
+<footer>
+  <strong>Combat réel :</strong> préparer les buffs et la jauge avant BREAK, déclencher BREAK sur commande, puis donner immédiatement le terrain au carry. Les cooldowns progressent hors terrain et les cinématiques d’ultime consomment le chrono.
+</footer>
+
+<script>
+const q = document.getElementById('search');
+q.addEventListener('input', () => {
+  const needle = q.value.trim().toLowerCase();
+  document.querySelectorAll('.comp').forEach(sec => {
+    sec.classList.toggle('hidden', needle && !sec.innerText.toLowerCase().includes(needle));
+  });
+});
+</script>
+</body>
+</html>
